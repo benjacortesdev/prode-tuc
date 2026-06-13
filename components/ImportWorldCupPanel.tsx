@@ -1,6 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface ImportWorldCupPanelProps {
   existingMatchCount: number;
@@ -62,46 +71,47 @@ export default function ImportWorldCupPanel({
   }
 
   return (
-    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-      <h2 className="mb-2 text-lg font-semibold text-gray-900">
-        Mundial FIFA 2026
-      </h2>
-      <p className="mb-4 text-sm text-gray-600">
-        Importa los 104 partidos desde Open Football (fixture + resultados). Sin
-        API key.
-      </p>
+    <Card className="border-primary/20 bg-primary/5">
+      <CardHeader>
+        <CardTitle>Mundial FIFA 2026</CardTitle>
+        <CardDescription>
+          Importa los 104 partidos desde Open Football (fixture + resultados).
+          Sin API key.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {existingMatchCount === 0 ? (
+            <Button onClick={() => handleImport(false)} disabled={loading}>
+              {loading ? "Procesando..." : "Importar 104 partidos"}
+            </Button>
+          ) : (
+            <>
+              <Button onClick={() => handleImport(true)} disabled={loading}>
+                {loading ? "Procesando..." : "Reimportar Mundial 2026"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSyncResults}
+                disabled={loading}
+              >
+                Sincronizar resultados
+              </Button>
+            </>
+          )}
+        </div>
 
-      <div className="flex flex-wrap gap-2">
-        {existingMatchCount === 0 ? (
-          <button
-            onClick={() => handleImport(false)}
-            disabled={loading}
-            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-          >
-            {loading ? "Procesando..." : "Importar 104 partidos"}
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={() => handleImport(true)}
-              disabled={loading}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-            >
-              {loading ? "Procesando..." : "Reimportar Mundial 2026"}
-            </button>
-            <button
-              onClick={handleSyncResults}
-              disabled={loading}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-            >
-              Sincronizar resultados
-            </button>
-          </>
+        {message && (
+          <Alert className="border-primary/30 bg-primary/10">
+            <AlertDescription className="text-primary">{message}</AlertDescription>
+          </Alert>
         )}
-      </div>
-
-      {message && <p className="mt-3 text-sm text-emerald-700">{message}</p>}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-    </div>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 }

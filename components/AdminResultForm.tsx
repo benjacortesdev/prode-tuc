@@ -2,6 +2,24 @@
 
 import { useState } from "react";
 import TeamWithFlag from "@/components/TeamWithFlag";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { parseTeamLabel } from "@/lib/team-flags";
 import type { Match } from "@/lib/types";
 
@@ -61,83 +79,93 @@ export default function AdminResultForm({
 
   if (pendingMatches.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-gray-900">
-          Cargar resultados
-        </h2>
-        <p className="text-sm text-gray-500">
-          No hay partidos pendientes de resultado.
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Cargar resultados</CardTitle>
+          <CardDescription>
+            No hay partidos pendientes de resultado.
+          </CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
-    >
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">
-        Cargar resultados
-      </h2>
+    <Card>
+      <CardHeader>
+        <CardTitle>Cargar resultados</CardTitle>
+        <CardDescription>
+          Ingresa el marcador final y se calculan los puntos automáticamente
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Partido</Label>
+            <Select
+              value={selectedId}
+              onValueChange={(value) => setSelectedId(value ?? "")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar partido" />
+              </SelectTrigger>
+              <SelectContent>
+                {pendingMatches.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {parseTeamLabel(m.homeTeam).name} vs{" "}
+                    {parseTeamLabel(m.awayTeam).name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="mb-3">
-        <label className="mb-1 block text-sm text-gray-600">Partido</label>
-        <select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2"
-        >
-          {pendingMatches.map((m) => (
-            <option key={m.id} value={m.id}>
-              {parseTeamLabel(m.homeTeam).name} vs {parseTeamLabel(m.awayTeam).name}
-            </option>
-          ))}
-        </select>
-      </div>
+          {selectedMatch && (
+            <div className="flex items-center justify-center gap-4 rounded-lg bg-muted/50 py-4">
+              <TeamWithFlag team={selectedMatch.homeTeam} flagSize={24} />
+              <span className="text-sm text-muted-foreground">vs</span>
+              <TeamWithFlag team={selectedMatch.awayTeam} flagSize={24} />
+            </div>
+          )}
 
-      {selectedMatch && (
-        <div className="mb-4 flex items-center justify-center gap-4 rounded-lg bg-gray-50 py-3">
-          <TeamWithFlag team={selectedMatch.homeTeam} flagSize={24} />
-          <span className="text-sm text-gray-400">vs</span>
-          <TeamWithFlag team={selectedMatch.awayTeam} flagSize={24} />
-        </div>
-      )}
+          <div className="flex items-center justify-center gap-3">
+            <Input
+              type="number"
+              min={0}
+              max={20}
+              value={homeScore}
+              onChange={(e) => setHomeScore(Number(e.target.value))}
+              className="h-12 w-20 text-center text-lg font-bold"
+            />
+            <span className="text-muted-foreground">-</span>
+            <Input
+              type="number"
+              min={0}
+              max={20}
+              value={awayScore}
+              onChange={(e) => setAwayScore(Number(e.target.value))}
+              className="h-12 w-20 text-center text-lg font-bold"
+            />
+          </div>
 
-      <div className="flex items-center justify-center gap-3">
-        <input
-          type="number"
-          min={0}
-          max={20}
-          value={homeScore}
-          onChange={(e) => setHomeScore(Number(e.target.value))}
-          className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-lg font-bold"
-        />
-        <span className="text-gray-400">-</span>
-        <input
-          type="number"
-          min={0}
-          max={20}
-          value={awayScore}
-          onChange={(e) => setAwayScore(Number(e.target.value))}
-          className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-center text-lg font-bold"
-        />
-      </div>
+          {success && (
+            <Alert className="border-primary/30 bg-primary/5">
+              <AlertDescription className="text-primary">
+                Resultado cargado y puntos calculados
+              </AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-4 w-full rounded-lg bg-emerald-700 py-2 font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-      >
-        {loading ? "Guardando..." : "Guardar resultado y calcular puntos"}
-      </button>
-
-      {success && (
-        <p className="mt-2 text-sm text-emerald-600">
-          Resultado cargado y puntos calculados
-        </p>
-      )}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-    </form>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Guardando..." : "Guardar resultado y calcular puntos"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

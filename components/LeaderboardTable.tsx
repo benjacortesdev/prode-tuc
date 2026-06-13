@@ -1,4 +1,20 @@
 import type { LeaderboardEntry } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -11,47 +27,67 @@ export default function LeaderboardTable({
 }: LeaderboardTableProps) {
   if (entries.length === 0) {
     return (
-      <p className="text-center text-gray-500 py-8">
-        Aún no hay participantes en el torneo.
-      </p>
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">
+          Aún no hay participantes en el torneo.
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-emerald-800 text-white">
-          <tr>
-            <th className="px-4 py-3 font-medium">#</th>
-            <th className="px-4 py-3 font-medium">Participante</th>
-            <th className="px-4 py-3 font-medium text-right">Puntos</th>
-            <th className="px-4 py-3 font-medium text-right">Exactos</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => (
-            <tr
-              key={entry.nickname}
-              className={`border-t border-gray-100 ${
-                entry.nickname === highlightNickname
-                  ? "bg-emerald-50"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              <td className="px-4 py-3 font-bold text-emerald-800">
-                {entry.position}
-              </td>
-              <td className="px-4 py-3 font-medium">{entry.nickname}</td>
-              <td className="px-4 py-3 text-right font-bold">
-                {entry.totalPoints}
-              </td>
-              <td className="px-4 py-3 text-right text-gray-600">
-                {entry.exactScores}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card className="overflow-hidden py-0">
+      <CardHeader className="border-b bg-primary text-primary-foreground">
+        <CardTitle className="text-primary-foreground">Ranking</CardTitle>
+        <CardDescription className="text-primary-foreground/80">
+          Puntos totales y marcadores exactos
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-12">#</TableHead>
+              <TableHead>Participante</TableHead>
+              <TableHead className="text-right">Puntos</TableHead>
+              <TableHead className="text-right">Exactos</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entries.map((entry) => {
+              const isHighlighted = entry.nickname === highlightNickname;
+              return (
+                <TableRow
+                  key={entry.nickname}
+                  className={isHighlighted ? "bg-primary/10" : undefined}
+                >
+                  <TableCell className="font-bold text-primary">
+                    {entry.position === 1 ? (
+                      <Badge variant="default">1</Badge>
+                    ) : (
+                      entry.position
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {entry.nickname}
+                    {isHighlighted && (
+                      <Badge variant="outline" className="ml-2">
+                        Tú
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right text-lg font-bold">
+                    {entry.totalPoints}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {entry.exactScores}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

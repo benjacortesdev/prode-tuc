@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import PageHeader from "@/components/PageHeader";
 import AdminMatchForm from "@/components/AdminMatchForm";
 import AdminResultForm from "@/components/AdminResultForm";
 import ImportWorldCupPanel from "@/components/ImportWorldCupPanel";
 import TeamWithFlag from "@/components/TeamWithFlag";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import type { Match } from "@/lib/types";
 
 interface AdminClientProps {
@@ -38,9 +41,10 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">
-        Panel de administración
-      </h1>
+      <PageHeader
+        title="Panel de administración"
+        description="Gestiona partidos, resultados y el fixture del Mundial"
+      />
 
       <ImportWorldCupPanel
         existingMatchCount={matches.length}
@@ -52,37 +56,39 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
         <AdminResultForm matches={matches} onUpdated={refreshMatches} />
       </div>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">
-          Partidos programados
-        </h2>
+      <section className="mt-8 space-y-3">
+        <h2 className="text-lg font-semibold">Partidos programados</h2>
 
         {futureMatches.length === 0 ? (
-          <p className="text-sm text-gray-500">No hay partidos programados.</p>
+          <Card>
+            <CardContent className="py-6 text-sm text-muted-foreground">
+              No hay partidos programados.
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-2">
             {futureMatches.map((match) => (
-              <div
-                key={match.id}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <TeamWithFlag team={match.homeTeam} flagSize={20} />
-                    <span className="text-gray-400 text-sm">vs</span>
-                    <TeamWithFlag team={match.awayTeam} flagSize={20} />
+              <Card key={match.id} size="sm">
+                <CardContent className="flex items-center justify-between gap-4 py-3">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <TeamWithFlag team={match.homeTeam} flagSize={20} />
+                      <span className="text-sm text-muted-foreground">vs</span>
+                      <TeamWithFlag team={match.awayTeam} flagSize={20} />
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {new Date(match.startTime).toLocaleString("es-AR")}
+                    </p>
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {new Date(match.startTime).toLocaleString("es-AR")}
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDelete(match.id)}
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  Eliminar
-                </button>
-              </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(match.id)}
+                  >
+                    Eliminar
+                  </Button>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}

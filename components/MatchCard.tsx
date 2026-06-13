@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from "react";
 import TeamWithFlag from "@/components/TeamWithFlag";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import type { Match, Prediction } from "@/lib/types";
 
 interface MatchCardProps {
@@ -65,92 +75,106 @@ export default function MatchCard({
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-sm text-gray-500">{formatDateTime(match.startTime)}</span>
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+        <span className="text-sm text-muted-foreground">
+          {formatDateTime(match.startTime)}
+        </span>
         {locked || match.scored ? (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-            Cerrado
-          </span>
+          <Badge variant="secondary">Cerrado</Badge>
         ) : prediction ? (
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-            Pronosticado
-          </span>
+          <Badge>Pronosticado</Badge>
         ) : null}
-      </div>
+      </CardHeader>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1">
-          <TeamWithFlag team={match.homeTeam} />
-          {match.scored && (
-            <p className="mt-1 text-center text-2xl font-bold text-emerald-700">
-              {match.homeScore}
-            </p>
-          )}
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1">
+            <TeamWithFlag team={match.homeTeam} />
+            {match.scored && (
+              <p className="mt-2 text-center text-3xl font-bold text-primary">
+                {match.homeScore}
+              </p>
+            )}
+          </div>
+
+          <span className="shrink-0 text-sm font-medium text-muted-foreground">
+            vs
+          </span>
+
+          <div className="flex-1">
+            <TeamWithFlag team={match.awayTeam} />
+            {match.scored && (
+              <p className="mt-2 text-center text-3xl font-bold text-primary">
+                {match.awayScore}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="text-gray-400 font-medium shrink-0">vs</div>
+        {editable && (
+          <div className="flex items-center justify-center gap-3">
+            <Input
+              type="number"
+              min={0}
+              max={20}
+              value={homeScore}
+              onChange={(e) => setHomeScore(Number(e.target.value))}
+              className="h-12 w-16 text-center text-lg font-bold"
+            />
+            <span className="text-muted-foreground">-</span>
+            <Input
+              type="number"
+              min={0}
+              max={20}
+              value={awayScore}
+              onChange={(e) => setAwayScore(Number(e.target.value))}
+              className="h-12 w-16 text-center text-lg font-bold"
+            />
+          </div>
+        )}
 
-        <div className="flex-1">
-          <TeamWithFlag team={match.awayTeam} />
-          {match.scored && (
-            <p className="mt-1 text-center text-2xl font-bold text-emerald-700">
-              {match.awayScore}
-            </p>
-          )}
-        </div>
-      </div>
+        {!editable && prediction && !match.scored && (
+          <p className="text-center text-sm text-muted-foreground">
+            Tu pronóstico:{" "}
+            <span className="font-semibold text-foreground">
+              {prediction.homeScore} - {prediction.awayScore}
+            </span>
+          </p>
+        )}
+
+        {prediction?.points !== undefined && match.scored && (
+          <p className="text-center text-sm font-medium text-primary">
+            Puntos obtenidos: {prediction.points}
+          </p>
+        )}
+
+        {message && (
+          <Alert className="border-primary/30 bg-primary/5 py-2">
+            <AlertDescription className="text-primary">
+              {message}
+            </AlertDescription>
+          </Alert>
+        )}
+        {error && (
+          <Alert variant="destructive" className="py-2">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
 
       {editable && (
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={homeScore}
-            onChange={(e) => setHomeScore(Number(e.target.value))}
-            className="w-16 rounded-lg border border-gray-300 px-2 py-2 text-center text-lg font-bold"
-          />
-          <span className="text-gray-400">-</span>
-          <input
-            type="number"
-            min={0}
-            max={20}
-            value={awayScore}
-            onChange={(e) => setAwayScore(Number(e.target.value))}
-            className="w-16 rounded-lg border border-gray-300 px-2 py-2 text-center text-lg font-bold"
-          />
-        </div>
+        <CardFooter className="border-t-0 pt-0">
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full"
+            size="lg"
+          >
+            {saving ? "Guardando..." : "Guardar pronóstico"}
+          </Button>
+        </CardFooter>
       )}
-
-      {!editable && prediction && !match.scored && (
-        <p className="mt-3 text-center text-sm text-gray-600">
-          Tu pronóstico: {prediction.homeScore} - {prediction.awayScore}
-        </p>
-      )}
-
-      {prediction?.points !== undefined && match.scored && (
-        <p className="mt-3 text-center text-sm font-medium text-emerald-700">
-          Puntos obtenidos: {prediction.points}
-        </p>
-      )}
-
-      {editable && (
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="mt-4 w-full rounded-lg bg-emerald-700 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-        >
-          {saving ? "Guardando..." : "Guardar pronóstico"}
-        </button>
-      )}
-
-      {message && (
-        <p className="mt-2 text-center text-sm text-emerald-600">{message}</p>
-      )}
-      {error && (
-        <p className="mt-2 text-center text-sm text-red-600">{error}</p>
-      )}
-    </div>
+    </Card>
   );
 }

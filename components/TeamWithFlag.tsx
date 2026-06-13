@@ -42,7 +42,7 @@ export default function TeamWithFlag({
             ?
           </span>
         )}
-        <span className="font-semibold text-gray-900 text-center leading-tight">
+        <span className="font-semibold text-foreground text-center leading-tight">
           {name}
         </span>
       </div>

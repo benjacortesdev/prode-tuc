@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
+import MatchResultCard from "@/components/MatchResultCard";
+import PageHeader from "@/components/PageHeader";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Match, Prediction } from "@/lib/types";
 
 interface PredictionsClientProps {
@@ -46,38 +53,71 @@ export default function PredictionsClient({
   }
 
   const upcoming = matches.filter((m) => !m.scored);
-  const finished = matches.filter((m) => m.scored);
+  const finished = matches
+    .filter((m) => m.scored)
+    .sort(
+      (a, b) =>
+        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+    );
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-gray-900">Pronósticos</h1>
-      <p className="mb-6 text-sm text-gray-600">
-        Arriesga el marcador exacto. 3 pts exacto, 1 pt tendencia, 0 pts si fallas.
-      </p>
+      <PageHeader
+        title="Mundial 2026"
+        description="Arriesga el marcador exacto. 3 pts exacto, 1 pt tendencia, 0 pts si fallas."
+      />
 
       {!isLoggedIn && (
-        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          <a href="/login" className="font-medium underline">
-            Inicia sesión
-          </a>{" "}
-          para guardar tus pronósticos.
-        </div>
+        <Alert className="mb-6">
+          <AlertDescription>
+            <Link href="/login" className="font-medium text-primary underline">
+              Inicia sesión
+            </Link>{" "}
+            para guardar tus pronósticos.
+          </AlertDescription>
+        </Alert>
       )}
 
       {matches.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">
-          Todavía no hay partidos cargados.
-        </p>
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Todavía no hay partidos cargados.
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-8">
-          {upcoming.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-lg font-semibold text-gray-800">
-                Próximos partidos
-              </h2>
+        <Tabs defaultValue="predictions" className="w-full">
+          <TabsList className="mb-6 w-full sm:w-auto">
+            <TabsTrigger value="predictions" className="gap-2">
+              Pronósticos
+              {upcoming.length > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5">
+                  {upcoming.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="results" className="gap-2">
+              Resultados
+              {finished.length > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5">
+                  {finished.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="predictions" className="space-y-4">
+            {upcoming.length === 0 ? (
+              <Card>
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  No hay partidos pendientes de pronosticar.
+                </CardContent>
+              </Card>
+            ) : (
               <div className="grid gap-4">
                 {upcoming.map((match) => {
-                  const prediction = predictions.find((p) => p.matchId === match.id);
+                  const prediction = predictions.find(
+                    (p) => p.matchId === match.id
+                  );
                   return (
                     <MatchCard
                       key={`${match.id}-${prediction?.homeScore ?? "n"}-${prediction?.awayScore ?? "n"}`}
@@ -89,28 +129,29 @@ export default function PredictionsClient({
                   );
                 })}
               </div>
-            </section>
-          )}
+            )}
+          </TabsContent>
 
-          {finished.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-lg font-semibold text-gray-800">
-                Partidos finalizados
-              </h2>
-              <div className="grid gap-4">
+          <TabsContent value="results" className="space-y-4">
+            {finished.length === 0 ? (
+              <Card>
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  Todavía no hay resultados cargados.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-3">
                 {finished.map((match) => (
-                  <MatchCard
+                  <MatchResultCard
                     key={match.id}
                     match={match}
                     prediction={predictions.find((p) => p.matchId === match.id)}
-                    canEdit={false}
-                    onSave={handleSave}
                   />
                 ))}
               </div>
-            </section>
-          )}
-        </div>
+            )}
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

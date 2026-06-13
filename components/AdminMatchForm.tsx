@@ -1,6 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AdminMatchFormProps {
   onCreated: () => void;
@@ -50,59 +61,64 @@ export default function AdminMatchForm({ onCreated }: AdminMatchFormProps) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
-    >
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Crear partido</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle>Crear partido</CardTitle>
+        <CardDescription>Agrega un partido manual al torneo</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="homeTeam">Equipo local</Label>
+              <Input
+                id="homeTeam"
+                value={homeTeam}
+                onChange={(e) => setHomeTeam(e.target.value)}
+                required
+                placeholder="Boca"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="awayTeam">Equipo visitante</Label>
+              <Input
+                id="awayTeam"
+                value={awayTeam}
+                onChange={(e) => setAwayTeam(e.target.value)}
+                required
+                placeholder="River"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="startTime">Fecha y hora</Label>
+              <Input
+                id="startTime"
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+              />
+            </div>
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm text-gray-600">Equipo local</label>
-          <input
-            type="text"
-            value={homeTeam}
-            onChange={(e) => setHomeTeam(e.target.value)}
-            required
-            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-            placeholder="Boca"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm text-gray-600">Equipo visitante</label>
-          <input
-            type="text"
-            value={awayTeam}
-            onChange={(e) => setAwayTeam(e.target.value)}
-            required
-            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-            placeholder="River"
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="mb-1 block text-sm text-gray-600">Fecha y hora</label>
-          <input
-            type="datetime-local"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            required
-            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-          />
-        </div>
-      </div>
+          {success && (
+            <Alert className="border-primary/30 bg-primary/5">
+              <AlertDescription className="text-primary">
+                Partido creado correctamente
+              </AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-4 w-full rounded-lg bg-emerald-700 py-2 font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
-      >
-        {loading ? "Creando..." : "Crear partido"}
-      </button>
-
-      {success && (
-        <p className="mt-2 text-sm text-emerald-600">Partido creado correctamente</p>
-      )}
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-    </form>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Creando..." : "Crear partido"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
