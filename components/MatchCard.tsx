@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +29,18 @@ export default function MatchCard({
   canEdit,
   onSave,
 }: MatchCardProps) {
-  const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? 0);
-  const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? 0);
+  const [homeValue, setHomeValue] = useState(
+    prediction?.homeScore != null ? String(prediction.homeScore) : ""
+  );
+  const [awayValue, setAwayValue] = useState(
+    prediction?.awayScore != null ? String(prediction.awayScore) : ""
+  );
+  const [homeDraft, setHomeDraft] = useState("");
+  const [awayDraft, setAwayDraft] = useState("");
+  const [homeFocused, setHomeFocused] = useState(false);
+  const [awayFocused, setAwayFocused] = useState(false);
+  const prevHomeValue = useRef(homeValue);
+  const prevAwayValue = useRef(awayValue);
   const [locked, setLocked] = useState(() => isMatchLocked(match));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -49,12 +59,65 @@ export default function MatchCard({
 
   const editable = canEdit && !locked && !match.scored;
 
+  function parseScore(value: string): number {
+    if (value === "") return 0;
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) return 0;
+    return Math.min(20, Math.max(0, parsed));
+  }
+
+  function handleScoreChange(
+    value: string,
+    setter: (next: string) => void
+  ) {
+    if (value === "" || (/^\d{1,2}$/.test(value) && Number(value) <= 20)) {
+      setter(value);
+    }
+  }
+
+  function handleScoreFocus(
+    current: string,
+    prevRef: React.MutableRefObject<string>,
+    setDraft: (next: string) => void,
+    setFocused: (focused: boolean) => void
+  ) {
+    prevRef.current = current;
+    setDraft("");
+    setFocused(true);
+  }
+
+  function handleScoreBlur(
+    draft: string,
+    prevRef: React.MutableRefObject<string>,
+    setValue: (next: string) => void,
+    setFocused: (focused: boolean) => void
+  ) {
+    setValue(draft === "" ? prevRef.current : draft);
+    setFocused(false);
+  }
+
+  function getScoreForSave(focused: boolean, draft: string, value: string) {
+    return parseScore(focused ? draft : value);
+  }
+
   async function handleSave() {
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      await onSave(match.id, homeScore, awayScore);
+      await onSave(
+        match.id,
+        getScoreForSave(homeFocused, homeDraft, homeValue),
+        getScoreForSave(awayFocused, awayDraft, awayValue)
+      );
+      if (homeFocused) {
+        setHomeValue(homeDraft === "" ? prevHomeValue.current : homeDraft);
+        setHomeFocused(false);
+      }
+      if (awayFocused) {
+        setAwayValue(awayDraft === "" ? prevAwayValue.current : awayDraft);
+        setAwayFocused(false);
+      }
       setMessage("Guardado");
       setTimeout(() => setMessage(null), 2000);
     } catch (err) {
@@ -105,22 +168,54 @@ export default function MatchCard({
         {editable && (
           <div className="flex items-center justify-center gap-4">
             <Input
-              type="number"
-              min={0}
-              max={20}
+              type="text"
               inputMode="numeric"
-              value={homeScore}
-              onChange={(e) => setHomeScore(Number(e.target.value))}
+              pattern="[0-9]*"
+              autoComplete="off"
+              value={homeFocused ? homeDraft : homeValue}
+              onFocus={() =>
+                handleScoreFocus(
+                  homeValue,
+                  prevHomeValue,
+                  setHomeDraft,
+                  setHomeFocused
+                )
+              }
+              onBlur={() =>
+                handleScoreBlur(
+                  homeDraft,
+                  prevHomeValue,
+                  setHomeValue,
+                  setHomeFocused
+                )
+              }
+              onChange={(e) => handleScoreChange(e.target.value, setHomeDraft)}
               className="h-14 w-[4.5rem] text-center text-xl font-bold md:h-12 md:w-16 md:text-lg"
             />
             <span className="text-lg text-muted-foreground">-</span>
             <Input
-              type="number"
-              min={0}
-              max={20}
+              type="text"
               inputMode="numeric"
-              value={awayScore}
-              onChange={(e) => setAwayScore(Number(e.target.value))}
+              pattern="[0-9]*"
+              autoComplete="off"
+              value={awayFocused ? awayDraft : awayValue}
+              onFocus={() =>
+                handleScoreFocus(
+                  awayValue,
+                  prevAwayValue,
+                  setAwayDraft,
+                  setAwayFocused
+                )
+              }
+              onBlur={() =>
+                handleScoreBlur(
+                  awayDraft,
+                  prevAwayValue,
+                  setAwayValue,
+                  setAwayFocused
+                )
+              }
+              onChange={(e) => handleScoreChange(e.target.value, setAwayDraft)}
               className="h-14 w-[4.5rem] text-center text-xl font-bold md:h-12 md:w-16 md:text-lg"
             />
           </div>
