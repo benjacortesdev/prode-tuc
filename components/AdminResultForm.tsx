@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import TeamWithFlag from "@/components/TeamWithFlag";
+import { parseTeamLabel } from "@/lib/team-flags";
 import type { Match } from "@/lib/types";
 
 interface AdminResultFormProps {
@@ -22,6 +24,8 @@ export default function AdminResultForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const selectedMatch = pendingMatches.find((m) => m.id === selectedId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,11 +90,19 @@ export default function AdminResultForm({
         >
           {pendingMatches.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.homeTeam} vs {m.awayTeam}
+              {parseTeamLabel(m.homeTeam).name} vs {parseTeamLabel(m.awayTeam).name}
             </option>
           ))}
         </select>
       </div>
+
+      {selectedMatch && (
+        <div className="mb-4 flex items-center justify-center gap-4 rounded-lg bg-gray-50 py-3">
+          <TeamWithFlag team={selectedMatch.homeTeam} flagSize={24} />
+          <span className="text-sm text-gray-400">vs</span>
+          <TeamWithFlag team={selectedMatch.awayTeam} flagSize={24} />
+        </div>
+      )}
 
       <div className="flex items-center justify-center gap-3">
         <input

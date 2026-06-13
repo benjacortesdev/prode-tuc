@@ -3,6 +3,8 @@
 import { useState } from "react";
 import AdminMatchForm from "@/components/AdminMatchForm";
 import AdminResultForm from "@/components/AdminResultForm";
+import ImportWorldCupPanel from "@/components/ImportWorldCupPanel";
+import TeamWithFlag from "@/components/TeamWithFlag";
 import type { Match } from "@/lib/types";
 
 interface AdminClientProps {
@@ -40,7 +42,12 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
         Panel de administración
       </h1>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <ImportWorldCupPanel
+        existingMatchCount={matches.length}
+        onImported={refreshMatches}
+      />
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <AdminMatchForm onCreated={refreshMatches} />
         <AdminResultForm matches={matches} onUpdated={refreshMatches} />
       </div>
@@ -60,10 +67,12 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
                 className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
               >
                 <div>
-                  <p className="font-medium">
-                    {match.homeTeam} vs {match.awayTeam}
-                  </p>
-                  <p className="text-sm text-gray-500">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <TeamWithFlag team={match.homeTeam} flagSize={20} />
+                    <span className="text-gray-400 text-sm">vs</span>
+                    <TeamWithFlag team={match.awayTeam} flagSize={20} />
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">
                     {new Date(match.startTime).toLocaleString("es-AR")}
                   </p>
                 </div>

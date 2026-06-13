@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import TeamWithFlag from "@/components/TeamWithFlag";
 import type { Match, Prediction } from "@/lib/types";
 
 interface MatchCardProps {
@@ -79,19 +80,23 @@ export default function MatchCard({
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-center">
-          <p className="font-semibold text-gray-900">{match.homeTeam}</p>
+        <div className="flex-1">
+          <TeamWithFlag team={match.homeTeam} />
           {match.scored && (
-            <p className="text-2xl font-bold text-emerald-700">{match.homeScore}</p>
+            <p className="mt-1 text-center text-2xl font-bold text-emerald-700">
+              {match.homeScore}
+            </p>
           )}
         </div>
 
-        <div className="text-gray-400 font-medium">vs</div>
+        <div className="text-gray-400 font-medium shrink-0">vs</div>
 
-        <div className="flex-1 text-center">
-          <p className="font-semibold text-gray-900">{match.awayTeam}</p>
+        <div className="flex-1">
+          <TeamWithFlag team={match.awayTeam} />
           {match.scored && (
-            <p className="text-2xl font-bold text-emerald-700">{match.awayScore}</p>
+            <p className="mt-1 text-center text-2xl font-bold text-emerald-700">
+              {match.awayScore}
+            </p>
           )}
         </div>
       </div>
