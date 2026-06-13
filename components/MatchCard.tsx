@@ -12,6 +12,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { isMatchLocked, getPredictionDeadline } from "@/lib/scoring";
 import type { Match, Prediction } from "@/lib/types";
 
 interface MatchCardProps {
@@ -39,9 +40,7 @@ export default function MatchCard({
 }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? 0);
   const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? 0);
-  const [locked, setLocked] = useState(
-    () => new Date(match.startTime) <= new Date()
-  );
+  const [locked, setLocked] = useState(() => isMatchLocked(match));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +48,8 @@ export default function MatchCard({
   useEffect(() => {
     if (locked) return;
 
-    const startMs = new Date(match.startTime).getTime();
-    const delay = startMs - Date.now();
+    const deadlineMs = getPredictionDeadline(match.startTime).getTime();
+    const delay = deadlineMs - Date.now();
     if (delay <= 0) return;
 
     const timeout = setTimeout(() => setLocked(true), delay);

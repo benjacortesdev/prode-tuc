@@ -64,7 +64,7 @@ export default function PredictionsClient({
     <div>
       <PageHeader
         title="Mundial 2026"
-        description="Arriesga el marcador exacto. 3 pts exacto, 1 pt tendencia, 0 pts si fallas."
+        description="Arriesga el marcador exacto. 3 pts exacto, 1 pt tendencia, 0 pts si fallas. Cierra 2 min antes de cada partido."
       />
 
       {!isLoggedIn && (

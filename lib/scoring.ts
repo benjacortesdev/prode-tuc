@@ -22,8 +22,16 @@ export function calculatePoints(
   return { points: 0, isExact: false };
 }
 
+export const PREDICTION_LOCK_MINUTES_BEFORE = 2;
+
+export function getPredictionDeadline(startTime: string): Date {
+  return new Date(
+    new Date(startTime).getTime() - PREDICTION_LOCK_MINUTES_BEFORE * 60 * 1000
+  );
+}
+
 export function isMatchLocked(match: { startTime: string }): boolean {
-  return new Date(match.startTime) <= new Date();
+  return getPredictionDeadline(match.startTime) <= new Date();
 }
 
 export function recalculateUserScores(state: ProdeState, userId: string): void {

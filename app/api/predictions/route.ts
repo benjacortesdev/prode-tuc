@@ -57,7 +57,9 @@ export async function POST(request: Request) {
         throw new Error("Partido no encontrado");
       }
       if (isMatchLocked(match)) {
-        throw new Error("El partido ya comenzó, no se puede modificar el pronóstico");
+        throw new Error(
+          "El pronóstico cierra 2 minutos antes del inicio del partido"
+        );
       }
 
       const existing = s.predictions.find(
