@@ -8,8 +8,11 @@ import PageHeader from "@/components/PageHeader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Match, Prediction } from "@/lib/types";
+
+const PAGE_SIZE = 10;
 
 interface PredictionsClientProps {
   initialMatches: Match[];
@@ -24,6 +27,8 @@ export default function PredictionsClient({
 }: PredictionsClientProps) {
   const [matches] = useState(initialMatches);
   const [predictions, setPredictions] = useState(initialPredictions);
+  const [upcomingPages, setUpcomingPages] = useState(1);
+  const [finishedPages, setFinishedPages] = useState(1);
 
   async function handleSave(
     matchId: string,
@@ -59,6 +64,11 @@ export default function PredictionsClient({
       (a, b) =>
         new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
     );
+
+  const visibleUpcoming = upcoming.slice(0, upcomingPages * PAGE_SIZE);
+  const visibleFinished = finished.slice(0, finishedPages * PAGE_SIZE);
+  const hasMoreUpcoming = visibleUpcoming.length < upcoming.length;
+  const hasMoreFinished = visibleFinished.length < finished.length;
 
   return (
     <div>
@@ -113,22 +123,39 @@ export default function PredictionsClient({
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
-                {upcoming.map((match) => {
-                  const prediction = predictions.find(
-                    (p) => p.matchId === match.id
-                  );
-                  return (
-                    <MatchCard
-                      key={`${match.id}-${prediction?.homeScore ?? "n"}-${prediction?.awayScore ?? "n"}`}
-                      match={match}
-                      prediction={prediction}
-                      canEdit={isLoggedIn}
-                      onSave={handleSave}
-                    />
-                  );
-                })}
-              </div>
+              <>
+                <div className="grid gap-4">
+                  {visibleUpcoming.map((match) => {
+                    const prediction = predictions.find(
+                      (p) => p.matchId === match.id
+                    );
+                    return (
+                      <MatchCard
+                        key={`${match.id}-${prediction?.homeScore ?? "n"}-${prediction?.awayScore ?? "n"}`}
+                        match={match}
+                        prediction={prediction}
+                        canEdit={isLoggedIn}
+                        onSave={handleSave}
+                      />
+                    );
+                  })}
+                </div>
+
+                {hasMoreUpcoming && (
+                  <div className="flex flex-col items-center gap-2 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      Mostrando {visibleUpcoming.length} de {upcoming.length}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="h-11 w-full md:w-auto"
+                      onClick={() => setUpcomingPages((p) => p + 1)}
+                    >
+                      Cargar más partidos
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
@@ -140,15 +167,32 @@ export default function PredictionsClient({
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-3">
-                {finished.map((match) => (
-                  <MatchResultCard
-                    key={match.id}
-                    match={match}
-                    prediction={predictions.find((p) => p.matchId === match.id)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid gap-3">
+                  {visibleFinished.map((match) => (
+                    <MatchResultCard
+                      key={match.id}
+                      match={match}
+                      prediction={predictions.find((p) => p.matchId === match.id)}
+                    />
+                  ))}
+                </div>
+
+                {hasMoreFinished && (
+                  <div className="flex flex-col items-center gap-2 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      Mostrando {visibleFinished.length} de {finished.length}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="h-11 w-full md:w-auto"
+                      onClick={() => setFinishedPages((p) => p + 1)}
+                    >
+                      Cargar más resultados
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>
