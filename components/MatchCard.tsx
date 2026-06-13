@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import MatchGoalsList from "@/components/MatchGoalsList";
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +15,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { isMatchLocked, getPredictionDeadline } from "@/lib/scoring";
 import { formatDateTime } from "@/lib/format-datetime";
+import {
+  getDisplayScore,
+  getLiveStatusLabel,
+  hasPartialScore,
+  isLiveMatch,
+  isMatchInProgress,
+} from "@/lib/match-live";
 import type { Match, Prediction } from "@/lib/types";
 
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
   canEdit: boolean;
+  highlight?: boolean;
   onSave: (matchId: string, homeScore: number, awayScore: number) => Promise<void>;
 }
 
@@ -27,6 +36,7 @@ export default function MatchCard({
   match,
   prediction,
   canEdit,
+  highlight = false,
   onSave,
 }: MatchCardProps) {
   const [homeValue, setHomeValue] = useState(
@@ -58,6 +68,14 @@ export default function MatchCard({
   }, [match.startTime, locked]);
 
   const editable = canEdit && !locked && !match.scored;
+  const playingNow = isMatchInProgress(match);
+  const live = isLiveMatch(match);
+  const partialScore = hasPartialScore(match);
+  const displayScore = getDisplayScore(match);
+  const liveLabel = getLiveStatusLabel(match);
+  const showScore = partialScore || live || match.scored;
+  const showGoals =
+    (match.homeGoals?.length ?? 0) > 0 || (match.awayGoals?.length ?? 0) > 0;
 
   function parseScore(value: string): number {
     if (value === "") return 0;
@@ -128,12 +146,20 @@ export default function MatchCard({
   }
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card
+      className={`transition-shadow hover:shadow-md ${
+        highlight ? "border-primary ring-2 ring-primary/20" : ""
+      }`}
+    >
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <span className="text-sm text-muted-foreground">
           {formatDateTime(match.startTime)}
         </span>
-        {locked || match.scored ? (
+        {live ? (
+          <Badge variant="destructive">{liveLabel ?? "En vivo"}</Badge>
+        ) : playingNow ? (
+          <Badge variant="destructive">En juego</Badge>
+        ) : locked ? (
           <Badge variant="secondary">Cerrado</Badge>
         ) : prediction ? (
           <Badge>Pronosticado</Badge>
@@ -144,9 +170,9 @@ export default function MatchCard({
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
             <TeamWithFlag team={match.homeTeam} />
-            {match.scored && (
+            {showScore && displayScore.home !== undefined && (
               <p className="mt-2 text-center text-3xl font-bold text-primary">
-                {match.homeScore}
+                {displayScore.home}
               </p>
             )}
           </div>
@@ -157,13 +183,20 @@ export default function MatchCard({
 
           <div className="flex-1">
             <TeamWithFlag team={match.awayTeam} />
-            {match.scored && (
+            {showScore && displayScore.away !== undefined && (
               <p className="mt-2 text-center text-3xl font-bold text-primary">
-                {match.awayScore}
+                {displayScore.away}
               </p>
             )}
           </div>
         </div>
+
+        {showGoals && (
+          <MatchGoalsList
+            homeGoals={match.homeGoals}
+            awayGoals={match.awayGoals}
+          />
+        )}
 
         {editable && (
           <div className="flex items-center justify-center gap-4">
@@ -227,6 +260,12 @@ export default function MatchCard({
             <span className="font-semibold text-foreground">
               {prediction.homeScore} - {prediction.awayScore}
             </span>
+          </p>
+        )}
+
+        {playingNow && partialScore && (
+          <p className="text-center text-xs text-muted-foreground">
+            Marcador parcial · se actualiza con el sync automático
           </p>
         )}
 

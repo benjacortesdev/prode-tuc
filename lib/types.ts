@@ -9,6 +9,11 @@ export interface User {
   createdAt: string;
 }
 
+export interface MatchGoal {
+  player: string;
+  minute: string;
+}
+
 export interface Match {
   id: string;
   homeTeam: string;
@@ -17,6 +22,11 @@ export interface Match {
   homeScore?: number;
   awayScore?: number;
   scored: boolean;
+  liveHomeScore?: number;
+  liveAwayScore?: number;
+  matchStatus?: string;
+  homeGoals?: MatchGoal[];
+  awayGoals?: MatchGoal[];
 }
 
 export interface Prediction {

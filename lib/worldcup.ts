@@ -84,6 +84,11 @@ const TEAM_NAMES_ES: Record<string, string> = {
   Panama: "Panamá",
 };
 
+interface OpenFootballGoal {
+  name: string;
+  minute: string | number;
+}
+
 interface OpenFootballMatch {
   round?: string;
   num?: number;
@@ -91,7 +96,9 @@ interface OpenFootballMatch {
   time: string;
   team1: string;
   team2: string;
-  score?: { ft?: [number, number] };
+  score?: { ft?: [number, number]; ht?: [number, number] };
+  goals1?: OpenFootballGoal[];
+  goals2?: OpenFootballGoal[];
   group?: string;
   ground?: string;
 }
@@ -173,6 +180,17 @@ function roundLabel(round?: string, num?: number): string {
   return labels[round] ?? round;
 }
 
+function parseOpenFootballGoals(
+  goals?: OpenFootballGoal[]
+): Match["homeGoals"] {
+  if (!goals?.length) return undefined;
+
+  return goals.map((goal) => ({
+    player: goal.name,
+    minute: String(goal.minute),
+  }));
+}
+
 export function openFootballToMatches(data: OpenFootballData): Match[] {
   return data.matches.map((m) => {
     const homeTeam = translateTeam(m.team1);
@@ -193,7 +211,16 @@ export function openFootballToMatches(data: OpenFootballData): Match[] {
       match.homeScore = m.score.ft[0];
       match.awayScore = m.score.ft[1];
       match.scored = true;
+    } else if (m.score?.ht && m.score.ht.length === 2) {
+      match.liveHomeScore = m.score.ht[0];
+      match.liveAwayScore = m.score.ht[1];
+      match.matchStatus = "HT";
     }
+
+    const homeGoals = parseOpenFootballGoals(m.goals1);
+    const awayGoals = parseOpenFootballGoals(m.goals2);
+    if (homeGoals) match.homeGoals = homeGoals;
+    if (awayGoals) match.awayGoals = awayGoals;
 
     return match;
   });

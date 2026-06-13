@@ -54,14 +54,24 @@ export default function ImportWorldCupPanel({
     setError(null);
 
     try {
-      const res = await fetch("/api/matches/import-worldcup", {
+      const res = await fetch("/api/matches/sync", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "sync-results" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al sincronizar");
-      setMessage(`Resultados actualizados: ${data.updated} partidos.`);
+
+      if (data.skipped) {
+        setMessage("Sin partidos activos para sincronizar ahora.");
+      } else {
+        const parts = [];
+        if (data.scored > 0) parts.push(`${data.scored} finalizado(s)`);
+        if (data.liveUpdated > 0) parts.push(`${data.liveUpdated} actualizado(s) en vivo`);
+        setMessage(
+          parts.length > 0
+            ? `Sincronizado: ${parts.join(", ")}.`
+            : "Sincronización completada sin cambios."
+        );
+      }
       onImported();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al sincronizar");
@@ -75,8 +85,8 @@ export default function ImportWorldCupPanel({
       <CardHeader>
         <CardTitle>Mundial FIFA 2026</CardTitle>
         <CardDescription>
-          Importa los 104 partidos desde Open Football (fixture + resultados).
-          Sin API key.
+          Importa los 104 partidos desde Open Football. Los resultados se
+          sincronizan automáticamente cada 5 min en días de partido.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

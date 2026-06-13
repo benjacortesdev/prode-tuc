@@ -1,3 +1,4 @@
+import MatchGoalsList from "@/components/MatchGoalsList";
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,6 +66,11 @@ export default function MatchResultCard({
             </p>
           </div>
         </div>
+
+        <MatchGoalsList
+          homeGoals={match.homeGoals}
+          awayGoals={match.awayGoals}
+        />
 
         {prediction && (
           <p className="text-center text-sm text-muted-foreground">

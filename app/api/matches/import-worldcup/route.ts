@@ -6,6 +6,7 @@ import {
   importWorldCup2026Matches,
   WORLD_CUP_API_SOURCES,
 } from "@/lib/worldcup";
+import { syncWorldCupResults } from "@/lib/worldcup-sync";
 
 export async function GET() {
   return NextResponse.json({
@@ -26,37 +27,19 @@ export async function POST(request: Request) {
     const force = Boolean(body.force);
 
     const state = await getState();
-    const { matches: imported, source, withResults } =
-      await importWorldCup2026Matches();
-    const importedMap = new Map(imported.map((m) => [m.id, m]));
 
     if (mode === "sync-results") {
-      let updated = 0;
-
-      for (const match of state.matches) {
-        const fresh = importedMap.get(match.id);
-        if (
-          !fresh?.scored ||
-          fresh.homeScore === undefined ||
-          fresh.awayScore === undefined
-        ) {
-          continue;
-        }
-        if (match.scored) continue;
-
-        scoreMatch(state, match.id, fresh.homeScore, fresh.awayScore);
-        updated++;
-      }
-
+      const result = await syncWorldCupResults(state, { force: true });
       await setState(state);
-
       return NextResponse.json({
         ok: true,
         mode: "sync-results",
-        updated,
-        totalMatches: state.matches.length,
+        ...result,
       });
     }
+
+    const { matches: imported, source, withResults } =
+      await importWorldCup2026Matches();
 
     if (state.matches.length > 0 && !force) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
 import MatchResultCard from "@/components/MatchResultCard";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCurrentMatch } from "@/lib/match-live";
 import type { Match, Prediction } from "@/lib/types";
 
 const PAGE_SIZE = 10;
@@ -25,10 +26,27 @@ export default function PredictionsClient({
   initialPredictions,
   isLoggedIn,
 }: PredictionsClientProps) {
-  const [matches] = useState(initialMatches);
+  const [matches, setMatches] = useState(initialMatches);
   const [predictions, setPredictions] = useState(initialPredictions);
   const [upcomingPages, setUpcomingPages] = useState(1);
   const [finishedPages, setFinishedPages] = useState(1);
+
+  useEffect(() => {
+    const hasUnscored = initialMatches.some((m) => !m.scored);
+    if (!hasUnscored) return;
+
+    async function refreshMatches() {
+      const res = await fetch("/api/matches");
+      const data = await res.json();
+      if (res.ok) {
+        setMatches(data.matches);
+      }
+    }
+
+    refreshMatches();
+    const interval = setInterval(refreshMatches, 30_000);
+    return () => clearInterval(interval);
+  }, [initialMatches]);
 
   async function handleSave(
     matchId: string,
@@ -58,6 +76,13 @@ export default function PredictionsClient({
   }
 
   const upcoming = matches.filter((m) => !m.scored);
+  const currentMatch = getCurrentMatch(upcoming);
+  const otherUpcoming = currentMatch
+    ? upcoming.filter((m) => m.id !== currentMatch.id)
+    : upcoming;
+  const sortedUpcoming = currentMatch
+    ? [currentMatch, ...otherUpcoming]
+    : upcoming;
   const finished = matches
     .filter((m) => m.scored)
     .sort(
@@ -65,9 +90,12 @@ export default function PredictionsClient({
         new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
     );
 
-  const visibleUpcoming = upcoming.slice(0, upcomingPages * PAGE_SIZE);
+  const listUpcoming = currentMatch
+    ? sortedUpcoming.filter((m) => m.id !== currentMatch.id)
+    : sortedUpcoming;
+  const visibleUpcoming = listUpcoming.slice(0, upcomingPages * PAGE_SIZE);
   const visibleFinished = finished.slice(0, finishedPages * PAGE_SIZE);
-  const hasMoreUpcoming = visibleUpcoming.length < upcoming.length;
+  const hasMoreUpcoming = visibleUpcoming.length < listUpcoming.length;
   const hasMoreFinished = visibleFinished.length < finished.length;
 
   return (
@@ -116,7 +144,25 @@ export default function PredictionsClient({
           </TabsList>
 
           <TabsContent value="predictions" className="space-y-4">
-            {upcoming.length === 0 ? (
+            {currentMatch && (
+              <section className="space-y-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-primary">
+                  Partido en curso
+                </h2>
+                <MatchCard
+                  key={`current-${currentMatch.id}`}
+                  match={currentMatch}
+                  prediction={predictions.find(
+                    (p) => p.matchId === currentMatch.id
+                  )}
+                  canEdit={isLoggedIn}
+                  highlight
+                  onSave={handleSave}
+                />
+              </section>
+            )}
+
+            {sortedUpcoming.length === 0 ? (
               <Card>
                 <CardContent className="py-10 text-center text-muted-foreground">
                   No hay partidos pendientes de pronosticar.
@@ -124,6 +170,11 @@ export default function PredictionsClient({
               </Card>
             ) : (
               <>
+                {currentMatch && sortedUpcoming.length > 1 && (
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Próximos partidos
+                  </h2>
+                )}
                 <div className="grid gap-4">
                   {visibleUpcoming.map((match) => {
                     const prediction = predictions.find(
@@ -144,7 +195,7 @@ export default function PredictionsClient({
                 {hasMoreUpcoming && (
                   <div className="flex flex-col items-center gap-2 pt-2">
                     <p className="text-sm text-muted-foreground">
-                      Mostrando {visibleUpcoming.length} de {upcoming.length}
+                      Mostrando {visibleUpcoming.length} de {listUpcoming.length}
                     </p>
                     <Button
                       variant="outline"
