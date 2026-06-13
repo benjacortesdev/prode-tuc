@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface NavUser {
   nickname: string;
@@ -58,21 +59,26 @@ export default function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-1 sm:gap-2">
-          {links.map((link) => (
-            <Button
-              key={link.href}
-              variant={pathname === link.href ? "secondary" : "ghost"}
-              size="sm"
-              render={<Link href={link.href} />}
-              className={
-                pathname === link.href
-                  ? "bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/20"
-                  : "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              }
-            >
-              {link.label}
-            </Button>
-          ))}
+          {links.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  buttonVariants({
+                    variant: isActive ? "secondary" : "ghost",
+                    size: "sm",
+                  }),
+                  isActive
+                    ? "bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/20"
+                    : "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
 
           <Separator
             orientation="vertical"
@@ -89,14 +95,15 @@ export default function Navbar() {
               Salir
             </Button>
           ) : (
-            <Button
-              variant="secondary"
-              size="sm"
-              render={<Link href="/login" />}
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+            <Link
+              href="/login"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              )}
             >
               Entrar
-            </Button>
+            </Link>
           )}
         </nav>
       </div>

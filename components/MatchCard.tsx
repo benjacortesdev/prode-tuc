@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { isMatchLocked, getPredictionDeadline } from "@/lib/scoring";
+import { formatDateTime } from "@/lib/format-datetime";
 import type { Match, Prediction } from "@/lib/types";
 
 interface MatchCardProps {
@@ -20,16 +21,6 @@ interface MatchCardProps {
   prediction?: Prediction;
   canEdit: boolean;
   onSave: (matchId: string, homeScore: number, awayScore: number) => Promise<void>;
-}
-
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("es-AR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export default function MatchCard({

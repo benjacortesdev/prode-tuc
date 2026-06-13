@@ -8,6 +8,7 @@ import ImportWorldCupPanel from "@/components/ImportWorldCupPanel";
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/format-datetime";
 import type { Match } from "@/lib/types";
 
 interface AdminClientProps {
@@ -77,7 +78,7 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
                       <TeamWithFlag team={match.awayTeam} flagSize={20} />
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {new Date(match.startTime).toLocaleString("es-AR")}
+                      {formatDateTime(match.startTime)}
                     </p>
                   </div>
                   <Button

@@ -1,21 +1,12 @@
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/format-datetime";
 import type { Match, Prediction } from "@/lib/types";
 
 interface MatchResultCardProps {
   match: Match;
   prediction?: Prediction;
-}
-
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("es-AR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function pointsBadgeVariant(points: number) {
