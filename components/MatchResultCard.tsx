@@ -28,11 +28,20 @@ export default function MatchResultCard({
           </span>
           {prediction?.points !== undefined ? (
             <Badge variant={pointsBadgeVariant(prediction.points)}>
-              {prediction.points === 3
-                ? "Exacto · 3 pts"
-                : prediction.points === 1
-                  ? "Tendencia · 1 pt"
-                  : "0 pts"}
+              <span className="md:hidden">
+                {prediction.points === 3
+                  ? "3 pts"
+                  : prediction.points === 1
+                    ? "1 pt"
+                    : "0 pts"}
+              </span>
+              <span className="hidden md:inline">
+                {prediction.points === 3
+                  ? "Exacto · 3 pts"
+                  : prediction.points === 1
+                    ? "Tendencia · 1 pt"
+                    : "0 pts"}
+              </span>
             </Badge>
           ) : (
             <Badge variant="outline">Sin pronóstico</Badge>

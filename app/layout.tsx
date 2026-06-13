@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Prode casero con marcador exacto para amigos y oficinas",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +36,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background">
         <Navbar />
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 sm:py-8">
+        <main className="mx-auto w-full max-w-4xl flex-1 px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-4 md:py-8">
           {children}
         </main>
       </body>

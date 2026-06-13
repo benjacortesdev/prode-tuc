@@ -103,23 +103,25 @@ export default function MatchCard({
         </div>
 
         {editable && (
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-4">
             <Input
               type="number"
               min={0}
               max={20}
+              inputMode="numeric"
               value={homeScore}
               onChange={(e) => setHomeScore(Number(e.target.value))}
-              className="h-12 w-16 text-center text-lg font-bold"
+              className="h-14 w-[4.5rem] text-center text-xl font-bold md:h-12 md:w-16 md:text-lg"
             />
-            <span className="text-muted-foreground">-</span>
+            <span className="text-lg text-muted-foreground">-</span>
             <Input
               type="number"
               min={0}
               max={20}
+              inputMode="numeric"
               value={awayScore}
               onChange={(e) => setAwayScore(Number(e.target.value))}
-              className="h-12 w-16 text-center text-lg font-bold"
+              className="h-14 w-[4.5rem] text-center text-xl font-bold md:h-12 md:w-16 md:text-lg"
             />
           </div>
         )}
@@ -158,7 +160,7 @@ export default function MatchCard({
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="w-full"
+            className="h-12 w-full text-base md:h-9 md:text-sm"
             size="lg"
           >
             {saving ? "Guardando..." : "Guardar pronóstico"}

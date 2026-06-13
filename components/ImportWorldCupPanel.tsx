@@ -80,18 +80,27 @@ export default function ImportWorldCupPanel({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {existingMatchCount === 0 ? (
-            <Button onClick={() => handleImport(false)} disabled={loading}>
+            <Button
+              className="h-11 w-full sm:w-auto"
+              onClick={() => handleImport(false)}
+              disabled={loading}
+            >
               {loading ? "Procesando..." : "Importar 104 partidos"}
             </Button>
           ) : (
             <>
-              <Button onClick={() => handleImport(true)} disabled={loading}>
+              <Button
+                className="h-11 w-full sm:w-auto"
+                onClick={() => handleImport(true)}
+                disabled={loading}
+              >
                 {loading ? "Procesando..." : "Reimportar Mundial 2026"}
               </Button>
               <Button
                 variant="outline"
+                className="h-11 w-full sm:w-auto"
                 onClick={handleSyncResults}
                 disabled={loading}
               >

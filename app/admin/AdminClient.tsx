@@ -52,7 +52,7 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
         onImported={refreshMatches}
       />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
         <AdminMatchForm onCreated={refreshMatches} />
         <AdminResultForm matches={matches} onUpdated={refreshMatches} />
       </div>
@@ -70,20 +70,20 @@ export default function AdminClient({ initialMatches }: AdminClientProps) {
           <div className="space-y-2">
             {futureMatches.map((match) => (
               <Card key={match.id} size="sm">
-                <CardContent className="flex items-center justify-between gap-4 py-3">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
+                <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
                       <TeamWithFlag team={match.homeTeam} flagSize={20} />
                       <span className="text-sm text-muted-foreground">vs</span>
                       <TeamWithFlag team={match.awayTeam} flagSize={20} />
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-2 text-center text-sm text-muted-foreground sm:text-left">
                       {formatDateTime(match.startTime)}
                     </p>
                   </div>
                   <Button
                     variant="destructive"
-                    size="sm"
+                    className="h-11 w-full shrink-0 sm:w-auto"
                     onClick={() => handleDelete(match.id)}
                   >
                     Eliminar

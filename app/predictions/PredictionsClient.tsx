@@ -86,7 +86,7 @@ export default function PredictionsClient({
         </Card>
       ) : (
         <Tabs defaultValue="predictions" className="w-full">
-          <TabsList className="mb-6 w-full sm:w-auto">
+          <TabsList className="mb-5 grid h-auto w-full grid-cols-2 md:mb-6 md:inline-flex md:w-auto">
             <TabsTrigger value="predictions" className="gap-2">
               Pronósticos
               {upcoming.length > 0 && (

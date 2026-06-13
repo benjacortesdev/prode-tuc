@@ -92,7 +92,7 @@ function LoginForm() {
               </Alert>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full" size="lg">
+            <Button type="submit" disabled={loading} className="h-12 w-full text-base md:h-9 md:text-sm" size="lg">
               {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
