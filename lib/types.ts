@@ -6,6 +6,8 @@ export interface User {
   isAdmin: boolean;
   totalPoints: number;
   exactScores: number;
+  baselinePoints?: number;
+  baselineExactScores?: number;
   createdAt: string;
 }
 
@@ -38,10 +40,16 @@ export interface Prediction {
   points?: number;
 }
 
+export interface ScoreBaseline {
+  establishedAt: string;
+  matchIds: string[];
+}
+
 export interface ProdeState {
   users: User[];
   matches: Match[];
   predictions: Prediction[];
+  scoreBaseline?: ScoreBaseline;
 }
 
 export interface SessionUser {
@@ -56,4 +64,11 @@ export interface LeaderboardEntry {
   nickname: string;
   totalPoints: number;
   exactScores: number;
+}
+
+export interface MatchPredictionEntry {
+  nickname: string;
+  homeScore: number;
+  awayScore: number;
+  points?: number;
 }

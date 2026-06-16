@@ -1,9 +1,12 @@
+import Link from "next/link";
 import MatchGoalsList from "@/components/MatchGoalsList";
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/format-datetime";
 import type { Match, Prediction } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface MatchResultCardProps {
   match: Match;
@@ -80,6 +83,16 @@ export default function MatchResultCard({
             </span>
           </p>
         )}
+
+        <Link
+          href={`/matches/${match.id}`}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-10 w-full text-sm"
+          )}
+        >
+          Ver pronósticos del partido
+        </Link>
       </CardContent>
     </Card>
   );

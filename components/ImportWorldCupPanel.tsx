@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +10,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/format-datetime";
 
 interface ImportWorldCupPanelProps {
   existingMatchCount: number;
   onImported: () => void;
+}
+
+interface BaselineStatus {
+  established: boolean;
+  establishedAt: string | null;
+  matchCount: number;
 }
 
 export default function ImportWorldCupPanel({
@@ -22,8 +29,27 @@ export default function ImportWorldCupPanel({
 }: ImportWorldCupPanelProps) {
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [confirmingBaseline, setConfirmingBaseline] = useState(false);
+  const [baselineLoading, setBaselineLoading] = useState(false);
+  const [baselineStatus, setBaselineStatus] = useState<BaselineStatus | null>(
+    null
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadBaselineStatus() {
+      try {
+        const res = await fetch("/api/admin/score-baseline");
+        if (res.ok) {
+          setBaselineStatus(await res.json());
+        }
+      } catch {
+        // ignore — panel sigue usable sin estado de línea base
+      }
+    }
+    loadBaselineStatus();
+  }, []);
 
   function handleReimportClick() {
     setConfirming(true);
@@ -88,7 +114,40 @@ export default function ImportWorldCupPanel({
     }
   }
 
+  async function handleEstablishBaseline() {
+    setConfirmingBaseline(false);
+    setBaselineLoading(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/admin/score-baseline", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Error al establecer línea base");
+      }
+
+      setBaselineStatus({
+        established: true,
+        establishedAt: data.establishedAt,
+        matchCount: data.matchCount,
+      });
+      setMessage(
+        `Línea base establecida: ${data.userCount} usuario(s), ${data.matchCount} partido(s) congelado(s).`
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error al establecer línea base"
+      );
+    } finally {
+      setBaselineLoading(false);
+    }
+  }
+
+  const isBusy = loading || baselineLoading;
+
   return (
+    <div className="space-y-6">
     <Card className="border-primary/20 bg-primary/5">
       <CardHeader>
         <CardTitle>Mundial FIFA 2026</CardTitle>
@@ -114,16 +173,16 @@ export default function ImportWorldCupPanel({
               <Button
                 className="h-11 w-full sm:w-auto"
                 onClick={handleReimportClick}
-                disabled={loading || confirming}
-              >
-                {loading ? "Procesando..." : "Reimportar Mundial 2026"}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-11 w-full sm:w-auto"
-                onClick={handleSyncResults}
-                disabled={loading || confirming}
-              >
+              disabled={loading || confirming || baselineLoading}
+            >
+              {loading ? "Procesando..." : "Reimportar Mundial 2026"}
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full sm:w-auto"
+              onClick={handleSyncResults}
+              disabled={loading || confirming || baselineLoading}
+            >
                 Sincronizar resultados
               </Button>
             </>
@@ -175,5 +234,81 @@ export default function ImportWorldCupPanel({
         )}
       </CardContent>
     </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Línea base de puntajes</CardTitle>
+        <CardDescription>
+          Congela los puntajes actuales del ranking y los partidos ya
+          finalizados. A partir de aquí solo sumarán puntos de partidos nuevos
+          según pronósticos.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {baselineStatus?.established && baselineStatus.establishedAt && (
+          <Alert>
+            <AlertDescription className="text-sm">
+              Línea base activa desde{" "}
+              {formatDateTime(baselineStatus.establishedAt)} (
+              {baselineStatus.matchCount} partido
+              {baselineStatus.matchCount === 1 ? "" : "s"} congelado
+              {baselineStatus.matchCount === 1 ? "" : "s"}). Re-establecerla
+              actualizará el snapshot con los totales actuales.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Button
+          variant="secondary"
+          className="h-11 w-full sm:w-auto"
+          onClick={() => {
+            setConfirmingBaseline(true);
+            setMessage(null);
+            setError(null);
+          }}
+          disabled={isBusy || confirmingBaseline}
+        >
+          {baselineLoading
+            ? "Procesando..."
+            : baselineStatus?.established
+              ? "Re-establecer línea base"
+              : "Establecer línea base de puntajes"}
+        </Button>
+
+        {confirmingBaseline && (
+          <Alert variant="destructive">
+            <AlertDescription className="space-y-3">
+              <p className="font-semibold">
+                ¿Confirmar línea base de puntajes?
+              </p>
+              <p className="text-sm">
+                Se congelarán los puntajes actuales de todos los usuarios y
+                los partidos ya finalizados. Los puntos de partidos futuros se
+                sumarán encima, sin borrar lo ya contabilizado.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleEstablishBaseline}
+                  disabled={baselineLoading}
+                >
+                  Sí, establecer
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setConfirmingBaseline(false)}
+                  disabled={baselineLoading}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+    </div>
   );
 }

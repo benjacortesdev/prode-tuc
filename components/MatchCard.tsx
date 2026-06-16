@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import MatchGoalsList from "@/components/MatchGoalsList";
 import TeamWithFlag from "@/components/TeamWithFlag";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import {
   isMatchInProgress,
 } from "@/lib/match-live";
 import type { Match, Prediction } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface MatchCardProps {
   match: Match;
@@ -299,6 +301,20 @@ export default function MatchCard({
           >
             {saving ? "Guardando..." : "Guardar pronóstico"}
           </Button>
+        </CardFooter>
+      )}
+
+      {locked && !match.scored && (
+        <CardFooter className="border-t pt-4">
+          <Link
+            href={`/matches/${match.id}`}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-12 w-full text-base md:h-9 md:text-sm"
+            )}
+          >
+            Ver pronósticos
+          </Link>
         </CardFooter>
       )}
     </Card>

@@ -1,4 +1,4 @@
-import type { ProdeState } from "./types";
+import type { MatchPredictionEntry, ProdeState } from "./types";
 
 export function calculatePoints(
   predHome: number,
@@ -34,23 +34,66 @@ export function isMatchLocked(match: { startTime: string }): boolean {
   return getPredictionDeadline(match.startTime) <= new Date();
 }
 
+function getBaselineMatchIds(state: ProdeState): Set<string> {
+  return new Set(state.scoreBaseline?.matchIds ?? []);
+}
+
 export function recalculateUserScores(state: ProdeState, userId: string): void {
   const user = state.users.find((u) => u.id === userId);
   if (!user) return;
 
+  const baselineMatchIds = getBaselineMatchIds(state);
   const scoredMatchIds = new Set(
     state.matches.filter((m) => m.scored).map((m) => m.id)
   );
 
-  const userPredictions = state.predictions.filter(
-    (p) => p.userId === userId && scoredMatchIds.has(p.matchId)
+  const incrementalPredictions = state.predictions.filter(
+    (p) =>
+      p.userId === userId &&
+      scoredMatchIds.has(p.matchId) &&
+      !baselineMatchIds.has(p.matchId)
   );
 
-  user.totalPoints = userPredictions.reduce(
+  const incrementalPoints = incrementalPredictions.reduce(
     (sum, p) => sum + (p.points ?? 0),
     0
   );
-  user.exactScores = userPredictions.filter((p) => p.points === 3).length;
+  const incrementalExactScores = incrementalPredictions.filter(
+    (p) => p.points === 3
+  ).length;
+
+  user.totalPoints = (user.baselinePoints ?? 0) + incrementalPoints;
+  user.exactScores = (user.baselineExactScores ?? 0) + incrementalExactScores;
+}
+
+export interface EstablishScoreBaselineResult {
+  establishedAt: string;
+  userCount: number;
+  matchCount: number;
+}
+
+export function establishScoreBaseline(
+  state: ProdeState
+): EstablishScoreBaselineResult {
+  const establishedAt = new Date().toISOString();
+  const matchIds = state.matches.filter((m) => m.scored).map((m) => m.id);
+
+  for (const user of state.users) {
+    user.baselinePoints = user.totalPoints;
+    user.baselineExactScores = user.exactScores;
+  }
+
+  state.scoreBaseline = { establishedAt, matchIds };
+
+  for (const user of state.users) {
+    recalculateUserScores(state, user.id);
+  }
+
+  return {
+    establishedAt,
+    userCount: state.users.length,
+    matchCount: matchIds.length,
+  };
 }
 
 export function scoreMatch(
@@ -86,6 +129,26 @@ export function scoreMatch(
   for (const userId of affectedUserIds) {
     recalculateUserScores(state, userId);
   }
+}
+
+export function buildMatchPredictions(
+  state: ProdeState,
+  matchId: string
+): MatchPredictionEntry[] {
+  const userById = new Map(state.users.map((u) => [u.id, u]));
+
+  return state.predictions
+    .filter((p) => p.matchId === matchId)
+    .map((p) => {
+      const user = userById.get(p.userId);
+      return {
+        nickname: user?.nickname ?? "Desconocido",
+        homeScore: p.homeScore,
+        awayScore: p.awayScore,
+        points: p.points,
+      };
+    })
+    .sort((a, b) => a.nickname.localeCompare(b.nickname, "es"));
 }
 
 export function buildLeaderboard(state: ProdeState) {
