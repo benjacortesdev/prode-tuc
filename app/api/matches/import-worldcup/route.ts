@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getState, setState } from "@/lib/db";
-import { scoreMatch } from "@/lib/scoring";
+import { scoreMatch, recalculateUserScores } from "@/lib/scoring";
 import {
   importWorldCup2026Matches,
   WORLD_CUP_API_SOURCES,
@@ -52,16 +52,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (force) {
-      state.predictions = [];
-      for (const user of state.users) {
-        user.totalPoints = 0;
-        user.exactScores = 0;
-      }
-    }
-
+    // Reemplazar los partidos sin tocar las predicciones existentes.
+    // Los IDs son estables (wc2026-N), así que los pronósticos guardados
+    // siguen apuntando a los mismos partidos tras la reimportación.
     state.matches = imported;
 
+    // Re-puntuar predicciones para partidos que ya tienen resultado.
     for (const match of imported) {
       if (
         match.scored &&
@@ -70,6 +66,12 @@ export async function POST(request: Request) {
       ) {
         scoreMatch(state, match.id, match.homeScore, match.awayScore);
       }
+    }
+
+    // Pase final: recalcular totales de todos los usuarios para asegurar
+    // consistencia con el nuevo fixture (cubre partidos sin resultado también).
+    for (const user of state.users) {
+      recalculateUserScores(state, user.id);
     }
 
     await setState(state);

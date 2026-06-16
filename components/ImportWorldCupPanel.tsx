@@ -21,10 +21,18 @@ export default function ImportWorldCupPanel({
   onImported,
 }: ImportWorldCupPanelProps) {
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  function handleReimportClick() {
+    setConfirming(true);
+    setMessage(null);
+    setError(null);
+  }
+
   async function handleImport(force = false) {
+    setConfirming(false);
     setLoading(true);
     setMessage(null);
     setError(null);
@@ -87,6 +95,8 @@ export default function ImportWorldCupPanel({
         <CardDescription>
           Importa los 104 partidos desde Open Football. Los resultados se
           sincronizan automáticamente cada 5 min en días de partido.
+          Reimportar actualiza el fixture y recalcula puntajes conservando
+          todos los pronósticos.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -103,8 +113,8 @@ export default function ImportWorldCupPanel({
             <>
               <Button
                 className="h-11 w-full sm:w-auto"
-                onClick={() => handleImport(true)}
-                disabled={loading}
+                onClick={handleReimportClick}
+                disabled={loading || confirming}
               >
                 {loading ? "Procesando..." : "Reimportar Mundial 2026"}
               </Button>
@@ -112,13 +122,46 @@ export default function ImportWorldCupPanel({
                 variant="outline"
                 className="h-11 w-full sm:w-auto"
                 onClick={handleSyncResults}
-                disabled={loading}
+                disabled={loading || confirming}
               >
                 Sincronizar resultados
               </Button>
             </>
           )}
         </div>
+
+        {confirming && (
+          <Alert variant="destructive">
+            <AlertDescription className="space-y-3">
+              <p className="font-semibold">
+                ⚠️ ¿Confirmar reimportación del Mundial 2026?
+              </p>
+              <p className="text-sm">
+                Esta acción reemplazará los 104 partidos y recalculará todos
+                los puntajes. Los pronósticos guardados se conservan, pero
+                la operación no se puede deshacer.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleImport(true)}
+                  disabled={loading}
+                >
+                  Sí, reimportar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setConfirming(false)}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {message && (
           <Alert className="border-primary/30 bg-primary/10">
