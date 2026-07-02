@@ -94,12 +94,21 @@ export default function ImportWorldCupPanel({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al sincronizar");
 
+      const parts = [];
+      if (data.metadataUpdated > 0) {
+        parts.push(`${data.metadataUpdated} equipo(s) actualizado(s)`);
+      }
       if (data.skipped) {
-        setMessage("Sin partidos activos para sincronizar ahora.");
+        setMessage(
+          parts.length > 0
+            ? `Sin partidos activos. ${parts.join(", ")}.`
+            : "Sin partidos activos para sincronizar ahora."
+        );
       } else {
-        const parts = [];
         if (data.scored > 0) parts.push(`${data.scored} finalizado(s)`);
-        if (data.liveUpdated > 0) parts.push(`${data.liveUpdated} actualizado(s) en vivo`);
+        if (data.liveUpdated > 0) {
+          parts.push(`${data.liveUpdated} actualizado(s) en vivo`);
+        }
         setMessage(
           parts.length > 0
             ? `Sincronizado: ${parts.join(", ")}.`

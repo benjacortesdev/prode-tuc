@@ -11,6 +11,7 @@ export interface SyncResult {
   reason?: string;
   liveUpdated: number;
   scored: number;
+  metadataUpdated: number;
 }
 
 interface SyncOptions {
@@ -50,21 +51,43 @@ function copyMatchGoals(target: Match, source: Match): boolean {
   return homeChanged || awayChanged;
 }
 
+function syncMatchMetadata(target: Match, source: Match): boolean {
+  const changed =
+    target.homeTeam !== source.homeTeam ||
+    target.awayTeam !== source.awayTeam;
+
+  if (changed) {
+    target.homeTeam = source.homeTeam;
+    target.awayTeam = source.awayTeam;
+  }
+
+  return changed;
+}
+
 export async function syncWorldCupResults(
   state: ProdeState,
   options: SyncOptions = {}
 ): Promise<SyncResult> {
+  const { matches: imported } = await importWorldCup2026Matches();
+  const importedMap = new Map(imported.map((m) => [m.id, m]));
+  let metadataUpdated = 0;
+
+  for (const match of state.matches) {
+    const fresh = importedMap.get(match.id);
+    if (!fresh) continue;
+    if (syncMatchMetadata(match, fresh)) metadataUpdated++;
+  }
+
   if (!options.force && !shouldSyncNow(state.matches)) {
     return {
       skipped: true,
       reason: "no_active_matches",
       liveUpdated: 0,
       scored: 0,
+      metadataUpdated,
     };
   }
 
-  const { matches: imported } = await importWorldCup2026Matches();
-  const importedMap = new Map(imported.map((m) => [m.id, m]));
   let scored = 0;
   let liveUpdated = 0;
 
@@ -115,5 +138,6 @@ export async function syncWorldCupResults(
     skipped: false,
     liveUpdated,
     scored,
+    metadataUpdated,
   };
 }
